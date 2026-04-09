@@ -33,6 +33,14 @@ DEFAULT_VARIANTS = [
         "hierarchy": "Balanced side-by-side comparison with no decorative filler.",
         "tone": "analytical, clean, decisive",
     },
+    {
+        "id": "insight-ribbon",
+        "name": "Insight Ribbon",
+        "best_for": "Hero slides, opener visuals, and wide executive summaries",
+        "layout": "Single horizontal narrative band with four evenly spaced support modules.",
+        "hierarchy": "Lead with the central claim, then scan left-to-right across short balanced support blocks.",
+        "tone": "sleek, panoramic, confident",
+    },
 ]
 
 
@@ -68,7 +76,7 @@ def load_brief(path: Path) -> dict:
         "palette": [str(x).strip() for x in data.get("palette", []) if str(x).strip()],
         "avoid": [str(x).strip() for x in data.get("avoid", []) if str(x).strip()],
         "aspect_ratio": str(data.get("aspect_ratio", "16:9")).strip() or "16:9",
-        "variant_count": int(data.get("variant_count", 3) or 3),
+        "variant_count": int(data.get("variant_count", 4) or 4),
     }
 
     if not normalized["topic"]:
@@ -82,7 +90,7 @@ def load_brief(path: Path) -> dict:
         fallback = normalized["topic"].strip().title()
         normalized["title"] = " ".join(fallback.split()[:5])
 
-    normalized["variant_count"] = max(1, min(3, normalized["variant_count"]))
+    normalized["variant_count"] = max(1, min(4, normalized["variant_count"]))
     if len(normalized["title"].split()) > 5:
         normalized["title"] = " ".join(normalized["title"].split()[:5])
 

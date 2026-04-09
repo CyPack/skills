@@ -4,15 +4,15 @@
   "evals": [
     {
       "id": 1,
-      "name": "smoke-blog-brief-produces-three-default-variants",
+      "name": "smoke-blog-brief-produces-four-default-variants",
       "prompt": "Create a polished infographic for a blog post on AI incident response. Audience is senior engineering managers. The graphic needs to show Detect, Triage, and Contain, plus the numbers 15 min MTTD and 2x faster rollback. Keep it clean and executive-friendly.",
-      "expected_output": "Builds three default variants, defaults to 16:9, keeps visible text terse, and avoids asking unnecessary follow-up questions because the brief is already sufficient.",
+      "expected_output": "Builds four default variants, defaults to 16:9, keeps visible text terse, and avoids asking unnecessary follow-up questions because the brief is already sufficient.",
       "files": [
         "templates/brief.json"
       ],
       "assertions": [
         {
-          "text": "Response offers three distinct infographic directions by default",
+          "text": "Response offers four distinct infographic directions by default",
           "type": "functional"
         },
         {
@@ -33,7 +33,7 @@
       "id": 2,
       "name": "edge-case-slide-override-respects-user-ratio",
       "prompt": "I only want one version for a keynote slide. Make it 3:4, comparison-focused, and use our navy + teal palette. The topic is build vs buy for internal copilots.",
-      "expected_output": "Respects the 3:4 override and the single-variant request instead of forcing the default trio, while still applying the anti-noise rules.",
+      "expected_output": "Respects the 3:4 override and the single-variant request instead of forcing the default quartet, while still applying the anti-noise rules.",
       "assertions": [
         {
           "text": "Response respects an explicit aspect-ratio override",
@@ -120,6 +120,34 @@
         "edge",
         "temporal",
         "api"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "batch-render-path-uses-concurrent-pack-runner",
+      "prompt": "I already have evals/files/sample-variant-pack.json. Render the whole Nano Banana 2 pack as fast as possible, keep one output directory per variant, and do not let one failed variant kill the rest.",
+      "expected_output": "Uses the batch render script, runs the pack concurrently, and preserves per-variant output isolation with a top-level manifest.",
+      "files": [
+        "evals/files/sample-variant-pack.json"
+      ],
+      "assertions": [
+        {
+          "text": "Response uses scripts/render_variant_pack.py for the full pack",
+          "type": "functional"
+        },
+        {
+          "text": "Response mentions concurrent or parallel rendering",
+          "type": "functional"
+        },
+        {
+          "text": "Response preserves per-variant output directories and a batch manifest",
+          "type": "structural"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "batch-render",
+        "parallel"
       ]
     }
   ]

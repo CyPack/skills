@@ -34,7 +34,7 @@ What do you need to do?
   Ask only for the missing essentials: topic, audience/context, must-include facts, and brand or style constraints.
 
 - The user wants an infographic now
-  Prepare three review variants by default at `16:9` unless the user specified another ratio. Read `references/patterns.md`.
+  Prepare four review variants by default at `16:9` unless the user specified another ratio. Read `references/patterns.md`.
 
 - The user wants live Gemini renders or proof that the prompt works
   Read `references/configuration.md`, then run `scripts/probe_gemini_image_api.py`.
@@ -47,10 +47,11 @@ What do you need to do?
 
 ## Default Operating Mode
 
-- Offer three distinct variants by default unless the user explicitly asks for one.
+- Offer four distinct variants by default unless the user explicitly asks for fewer.
 - Default aspect ratio to `16:9`.
 - Use Nano Banana 2 only. Do not fall back to older image models unless the user explicitly asks.
-- Use separate render passes for the three variants instead of trusting one request to return three images.
+- Render the default pack concurrently when you need live outputs fast.
+- Use separate render passes for the variants instead of trusting one request to return the exact number of images requested.
 - Keep visible text short: title up to 5 words, labels 1-3 words, no paragraphs in the image.
 - Prefer editorial restraint over maximal detail. If a choice would add noise, cut it.
 
@@ -71,18 +72,20 @@ If the user already gave the essentials, do not re-interview them. Build the var
 
 | Need | Do | Output |
 |---|---|---|
-| Fast prompt pack | Run `scripts/build_variant_pack.py` with a brief JSON | three prompt variants plus a markdown review sheet |
+| Fast prompt pack | Run `scripts/build_variant_pack.py` with a brief JSON | four prompt variants plus a markdown review sheet |
+| Fast parallel render | Run `scripts/render_variant_pack.py` on `variant-pack.json` | all variants rendered concurrently plus a batch manifest |
 | Live render proof | Run `scripts/probe_gemini_image_api.py` on one prompt | saved response JSON and local image files |
-| Default professional set | Use Executive Snapshot, Editorial Column, and Decision Board | three reviewable directions |
+| Default professional set | Use Executive Snapshot, Editorial Column, Decision Board, and Insight Ribbon | four reviewable directions |
 | Noise reduction | Remove extra panels, colors, and prose before re-rendering | cleaner second pass |
 
-## Default Variant Trio
+## Default Variant Quartet
 
 | Variant | Best For | Direction |
 |---|---|---|
 | Executive Snapshot | C-suite slides, board pre-reads, strategic summaries | one dominant claim or number with 3-4 disciplined support blocks |
 | Editorial Column | Blog posts, reports, explainers | tall stacked panels with generous whitespace and thin dividers |
 | Decision Board | trade-offs, frameworks, comparisons | modular grid or side-by-side layout with equal visual weight |
+| Insight Ribbon | keynote hero slides, opener visuals, and wide summaries | one horizontal narrative band with evenly spaced support modules |
 
 Read `references/patterns.md` for the exact prompt shape and regeneration ladder.
 
@@ -97,7 +100,7 @@ Read `references/patterns.md` for the exact prompt shape and regeneration ladder
 ## Gotchas
 
 1. Asking for a "detailed infographic" usually increases clutter rather than clarity. Ask for hierarchy, whitespace, and restraint instead.
-2. Google documents that the model might not create the exact number of images requested. Treat the three default variants as three deliberate passes.
+2. Google documents that the model might not create the exact number of images requested. Treat the four default variants as four deliberate passes.
 3. Google also documents that text generation works best when the text is decided first and then rendered into the image. Do not improvise long copy inside the image prompt.
 4. If the image looks like a poster, reduce the number of panels, colors, and icon families before changing everything else.
 5. When the user needs dense quantitative fidelity, hand-built charts or vector layouts may be a better fit than Gemini image generation.

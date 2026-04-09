@@ -30,3 +30,9 @@ Use this file as a lightweight handoff or review artifact.
 - strongest use case:
 - expected hierarchy:
 - keep or revise:
+
+### Insight Ribbon
+
+- strongest use case:
+- expected hierarchy:
+- keep or revise:

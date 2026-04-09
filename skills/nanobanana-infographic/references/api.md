@@ -19,7 +19,7 @@ This skill targets Nano Banana 2 through Gemini `generateContent`.
 - Callable Developer API model verified on April 9, 2026: `gemini-3.1-flash-image-preview`
 - Default aspect ratio: `16:9`
 - Default verification size: `1K`
-- Default workflow: one render pass per variant
+- Default workflow: one render pass per variant, batched concurrently when rendering the full pack
 
 Google's February 26, 2026 launch post identifies Nano Banana 2 as `Gemini 3.1 Flash Image`. A live `ListModels` call on April 9, 2026 exposed `models/gemini-3.1-flash-image-preview` as the callable Developer API model for this key. Use that callable ID in scripts and raw HTTP requests.
 
@@ -145,6 +145,6 @@ These are practical HTTP failures to expect when operating the API:
 
 ## See Also
 
-- `references/patterns.md` for the three-variant workflow
+- `references/patterns.md` for the four-variant workflow
 - `references/configuration.md` for the local scripts
 - `references/gotchas.md` for text and clutter pitfalls

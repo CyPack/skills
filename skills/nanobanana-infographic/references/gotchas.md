@@ -28,7 +28,7 @@ Google also documents that the model might not create the exact number of images
 
 Fix:
 
-- run three deliberate render passes
+- run four deliberate render passes
 - treat each pass as a named design direction
 - compare the saved outputs side by side
 
@@ -96,6 +96,15 @@ Fix:
 - use the public name when talking to users
 - use the callable model ID when writing code
 - re-check `ListModels` if the naming looks inconsistent again
+
+## 10. Serial Rendering Wastes Time Once The Pack Is Stable
+
+After the prompt pack is written, serially rendering each variant leaves network time idle.
+
+Fix:
+
+- use `scripts/render_variant_pack.py` for the first full review sweep
+- use `scripts/probe_gemini_image_api.py` only for one-off rerenders or debugging
 
 ## See Also
 

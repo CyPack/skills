@@ -3,8 +3,9 @@
 ## Table of Contents
 
 - [When To Ask Questions](#when-to-ask-questions)
-- [Three-Variant Default](#three-variant-default)
+- [Four-Variant Default](#four-variant-default)
 - [Prompt Formula](#prompt-formula)
+- [Parallel Rendering](#parallel-rendering)
 - [Quality Gates](#quality-gates)
 - [Iteration Ladder](#iteration-ladder)
 
@@ -19,15 +20,15 @@ Ask follow-up questions only when one of these is missing:
 
 Do not ask process questions that the skill can answer itself. If the user asks for "an infographic for a blog post about X", default to:
 
-- three variants
+- four variants
 - `16:9`
 - white or near-white background
 - flat editorial graphics
 - restrained palette
 
-## Three-Variant Default
+## Four-Variant Default
 
-Unless the user says otherwise, produce these three directions:
+Unless the user says otherwise, produce these four directions:
 
 ### 1. Executive Snapshot
 
@@ -62,6 +63,17 @@ Structure:
 - short comparison labels
 - no decorative background elements
 
+### 4. Insight Ribbon
+
+Use for hero slides, opener visuals, summary banners, and wide editorial headers.
+
+Structure:
+
+- one horizontal narrative band
+- 4 evenly spaced support modules or beats
+- strong left-to-right scan path
+- minimal vertical stacking
+
 ## Prompt Formula
 
 Use this shape. Keep it specific but not overloaded:
@@ -73,7 +85,7 @@ Topic: <topic>
 Audience/context: <audience>
 Core message: <message>
 Aspect ratio: <ratio>
-Variant direction: <one of the three default variants>
+Variant direction: <one of the four default variants>
 
 Must include:
 - <exact fact or section>
@@ -104,6 +116,18 @@ Avoid:
 - dashboard clutter
 ```
 
+## Parallel Rendering
+
+After the prompt pack is ready, render all variants concurrently by default:
+
+```bash
+python3 scripts/render_variant_pack.py \
+  --variant-pack ./out/prompt-pack/variant-pack.json \
+  --output-dir ./out/renders/batch
+```
+
+Use the batch renderer for the first sweep. Drop back to `scripts/probe_gemini_image_api.py` only when you want to rerender one variant in isolation.
+
 ## Quality Gates
 
 Reject and rerender when any of these happen:
@@ -124,7 +148,7 @@ When the first pass is wrong, do not rewrite everything immediately.
 4. If the image feels empty, add one stronger framing device, not more fragments.
 5. If the model keeps missing exact wording, render fewer words or move the longer explanation outside the image entirely.
 
-Use `scripts/build_variant_pack.py` to materialize the default trio from a structured brief.
+Use `scripts/build_variant_pack.py` to materialize the default quartet from a structured brief.
 
 ## See Also
 
