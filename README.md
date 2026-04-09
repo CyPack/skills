@@ -18,6 +18,10 @@ npx skills add https://github.com/jpcaparas/skills
 
 Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
 
+### `synthetic-search`
+
+Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quota checks, a zero-dependency Node helper, and live-tested API quirks.
+
 ### `skill-creator-advanced`
 
 Production-grade skill creator with progressive disclosure, validation, cross-harness guidance, and path-aware destination inference.

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for Synthetic Search, combining the published skills.sh examples with a verified local helper workflow. Covers raw search requests, jq-friendly extraction, quota inspection, helper scripts, and live-tested gotchas from April 9, 2026.",
+  "references": [
+    "https://skills.sh/sirn/dotfiles/synthetic-search",
+    "https://dev.synthetic.new/docs/synthetic/search",
+    "https://dev.synthetic.new/docs/synthetic/quotas",
+    "https://api.synthetic.new/v2/search",
+    "https://api.synthetic.new/v2/quotas"
+  ]
+}
