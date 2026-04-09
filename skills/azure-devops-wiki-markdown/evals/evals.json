@@ -1,0 +1,197 @@
+{
+  "skill_name": "azure-devops-wiki-markdown",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-wiki-page-with-mermaid-and-code",
+      "prompt": "I need an Azure DevOps wiki page for our release checklist. Include a TOC, a Bash code block, and a Mermaid diagram that shows draft -> review -> publish.",
+      "expected_output": "Produces wiki-safe Markdown using [[_TOC_]], a fenced Bash code block, and a ::: mermaid block that uses graph syntax.",
+      "assertions": [
+        {
+          "text": "Response includes [[_TOC_]] and a ::: mermaid block",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses wiki-safe Mermaid syntax rather than ```mermaid fences",
+          "type": "structural"
+        }
+      ],
+      "files": [
+        "references/syntax.md",
+        "references/mermaid.md",
+        "templates/wiki-page-starter.md"
+      ],
+      "tags": [
+        "smoke",
+        "wiki",
+        "mermaid"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-case-table-breaks-and-timeline",
+      "prompt": "My Azure DevOps wiki table needs a forced line break inside one cell, and I also want a timeline diagram for milestones. Show the correct syntax and call out any Azure-specific caveats.",
+      "expected_output": "Explains that <br/> works in wiki table cells, uses a timeline Mermaid block, and mentions wiki-specific limitations.",
+      "assertions": [
+        {
+          "text": "Response mentions <br/> for a wiki table cell",
+          "type": "functional"
+        },
+        {
+          "text": "Response mentions Mermaid limitations or wiki-only scope",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/syntax.md",
+        "references/mermaid.md"
+      ],
+      "tags": [
+        "edge",
+        "wiki",
+        "mermaid"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-github-readme-request",
+      "prompt": "Write a GitHub README with a ```mermaid code fence and generic GitHub-flavored Markdown tables. This is not for Azure DevOps.",
+      "expected_output": "Does not force Azure DevOps wiki-only syntax onto a GitHub-only request and makes clear that the skill is Azure DevOps-specific.",
+      "assertions": [
+        {
+          "text": "Does not insist on Azure DevOps wiki syntax for a GitHub-only task",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-code-language-alias",
+      "prompt": "Which language tag should I use for a TypeScript code fence in an Azure DevOps wiki, and how can I verify it locally?",
+      "expected_output": "Routes to the code-language reference, recommends ts or typescript, and mentions the helper script.",
+      "assertions": [
+        {
+          "text": "Agent reads references/code-languages.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response mentions python3 scripts/find_code_language.py",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/code-languages.md",
+        "scripts/find_code_language.py"
+      ],
+      "tags": [
+        "disclosure",
+        "code-fence"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "smoke-proposal-decision-tree",
+      "prompt": "Create an Azure DevOps wiki snippet that developers can use when proposing a rollout plan. Include a Mermaid decision tree and short sections for recommendation, risks, and next step.",
+      "expected_output": "Produces wiki-safe Markdown using a ::: mermaid block with graph syntax and follows the decision-tree proposal pattern.",
+      "assertions": [
+        {
+          "text": "Response includes a ::: mermaid block that uses graph TD or graph LR",
+          "type": "functional"
+        },
+        {
+          "text": "Response includes recommendation, risks, and next step sections outside the diagram",
+          "type": "structural"
+        }
+      ],
+      "files": [
+        "references/decision-trees.md",
+        "templates/decision-tree-proposal.md"
+      ],
+      "tags": [
+        "smoke",
+        "decision-tree",
+        "wiki"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "disclosure-advanced-wiki-features",
+      "prompt": "I want an Azure DevOps wiki page that shows child pages, wraps old content in a collapsible section, embeds an Azure Boards query, and mentions the owning group.",
+      "expected_output": "Routes to the advanced-features reference, uses [[_TOSP_]], <details>, query-table syntax, and distinguishes alias mentions from identity-guid mentions.",
+      "assertions": [
+        {
+          "text": "Agent reads references/advanced-features.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response includes [[_TOSP_]] and query-table syntax",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/advanced-features.md",
+        "templates/wiki-page-advanced-starter.md"
+      ],
+      "tags": [
+        "disclosure",
+        "advanced",
+        "wiki"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "support-matrix-surface-check",
+      "prompt": "Does Mermaid, KaTeX, and task lists work the same way in Azure DevOps README files, pull requests, and wiki pages?",
+      "expected_output": "Uses the support matrix and does not overstate wiki-only features on README files.",
+      "assertions": [
+        {
+          "text": "Agent reads references/support-matrix.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response distinguishes wiki-only features from PR or README support",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/support-matrix.md"
+      ],
+      "tags": [
+        "disclosure",
+        "matrix",
+        "scope"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "edge-ambiguous-highlight-alias",
+      "prompt": "Can I use ls as the code-fence language tag in Azure DevOps, or is that ambiguous?",
+      "expected_output": "Explains that ls is an ambiguous Highlight.js alias overlap and recommends a full language name or the helper script result.",
+      "assertions": [
+        {
+          "text": "Response mentions alias overlap or ambiguity",
+          "type": "functional"
+        },
+        {
+          "text": "Response can route to scripts/find_code_language.py",
+          "type": "verification"
+        }
+      ],
+      "files": [
+        "references/code-languages.md",
+        "scripts/find_code_language.py"
+      ],
+      "tags": [
+        "edge",
+        "code-fence",
+        "verification"
+      ]
+    }
+  ]
+}
+
