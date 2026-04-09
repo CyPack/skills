@@ -1,0 +1,100 @@
+{
+  "skill_name": "ripgrep",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-basic-literal-search",
+      "prompt": "Search this repository for every occurrence of RIPGREP_CONFIG_PATH and show file:line matches. Prefer the fastest search tool instead of grep.",
+      "expected_output": "Uses ripgrep, likely with -n, and searches text directly instead of reading every file or reaching for grep.",
+      "assertions": [
+        {
+          "text": "Output uses rg for the text search",
+          "type": "functional"
+        },
+        {
+          "text": "Response includes line-oriented output guidance such as -n or a file:line format",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "search"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-missing-result-debugging",
+      "prompt": "I know a match exists but ripgrep returns nothing. Walk me through the exact escalation path before I fall back to grep. Hidden files and ignore rules may be involved.",
+      "expected_output": "Explains normal search, then --hidden, then -u or --no-ignore, and mentions --debug for skip reasons.",
+      "assertions": [
+        {
+          "text": "Response escalates from default search to hidden and ignore overrides instead of jumping straight to grep",
+          "type": "functional"
+        },
+        {
+          "text": "Response mentions --debug as the diagnostic tool",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "search"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-full-file-read",
+      "prompt": "Open README.md and summarize the whole file for me. I do not want a search command.",
+      "expected_output": "Does not force ripgrep onto a full-file reading task and instead recognizes that reading the file directly is the right tool.",
+      "assertions": [
+        {
+          "text": "Does not insist on rg as the primary tool for full-file reading",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-config-guidance",
+      "prompt": "Give me a ripgrep config file that enables smart-case and adds a shared web file type for html, css, js, jsx, ts, and tsx.",
+      "expected_output": "Routes to the configuration reference and template, and produces a valid ripgrep config file.",
+      "files": [
+        "templates/ripgreprc.example"
+      ],
+      "assertions": [
+        {
+          "text": "Agent reads references/configuration.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output includes smart-case and a web type-add entry",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "configuration"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "smoke-filename-discovery",
+      "prompt": "Find every Dockerfile-like path in this project without using find | grep.",
+      "expected_output": "Uses rg --files and filters the resulting path list with a second rg or an rg glob strategy.",
+      "assertions": [
+        {
+          "text": "Output prefers rg --files for filename discovery",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "patterns"
+      ]
+    }
+  ]
+}
