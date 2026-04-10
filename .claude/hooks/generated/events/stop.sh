@@ -38,10 +38,29 @@ fi
 # CLAUDE_PROJECT_DIR is set by Claude Code for hook invocations.
 cd "${CLAUDE_PROJECT_DIR:-$SCRIPT_DIR/../../../..}"
 
-# Fast path: nothing to validate if the working tree is clean and the branch
-# is not ahead of its upstream. Untracked files count as dirty (porcelain
-# reports them).
+# Fast path: nothing to validate if the working tree is clean, the branch is
+# not ahead of its upstream, AND no skill files are hidden from CI by an
+# external ignore source (user-global gitignore or $GIT_DIR/info/exclude).
+#
+# Untracked files count as dirty via git status --porcelain. Globally-ignored
+# files do NOT show up in porcelain, so a newly created AGENTS.md (ignored by
+# the user's global gitignore) would slip past the fast path and cause a CI
+# failure that this hook never warned about. has_invisible_skill_files()
+# closes that hole by forcing full validation whenever such files exist.
+has_invisible_skill_files() {
+    while IFS= read -r file; do
+        [ -z "$file" ] && continue
+        src="$(git check-ignore -v -- "$file" 2>/dev/null || true)"
+        src="${src%%:*}"
+        if [[ "$src" == /* ]] || [[ "$src" == *".git/info/exclude" ]]; then
+            return 0
+        fi
+    done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
+    return 1
+}
+
 if [ -z "$(git status --porcelain 2>/dev/null)" ] \
+    && ! has_invisible_skill_files \
     && upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" \
     && ahead_count="$(git rev-list --count "${upstream_ref}..HEAD" 2>/dev/null)" \
     && [ "$ahead_count" = "0" ]; then

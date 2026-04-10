@@ -21,6 +21,12 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install ripgrep
+        # Required by skills/ripgrep/scripts/probe_ripgrep.py, which shells
+        # out to `rg --version` during validation. ubuntu-latest does not
+        # ship ripgrep preinstalled.
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
       - name: Validate Skills
         shell: bash
         run: bash scripts/validate-all-skills.sh

@@ -33,5 +33,54 @@ while IFS= read -r skill; do
     python3 "${skill}/scripts/test_skill.py" "${skill}"
 done < <(find skills -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/SKILL.md" ';' -print | LC_ALL=C sort)
 
+# Cross-check: files under skills/ that a fresh CI checkout will NOT see.
+# This catches two classes of footgun that each skill's own validate.py
+# cannot detect, because validate.py only inspects the working tree:
+#
+#   1. A required file is hidden from git by the user's global gitignore
+#      or $GIT_DIR/info/exclude. Local validation passes (the file is on
+#      disk) but CI fails on a fresh checkout (the file was never pushed).
+#      This is exactly how `skills/better-writing/AGENTS.md` broke CI.
+#
+#   2. A new file was created under skills/<name>/ but never `git add`ed.
+#      Same symptom: present locally, missing on CI.
+#
+# Files ignored by an in-tree .gitignore (relative path) are legitimate
+# exclusions — e.g. `__pycache__/` — and are not flagged.
+if git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Checking for skill files invisible to a fresh CI checkout"
+
+    invisible_hits=()
+
+    # (1) On-disk files hidden by an external ignore source.
+    while IFS= read -r file; do
+        [ -z "$file" ] && continue
+        source_line="$(git check-ignore -v -- "$file" 2>/dev/null || true)"
+        source_file="${source_line%%:*}"
+        if [[ "$source_file" == /* ]] || [[ "$source_file" == *".git/info/exclude" ]]; then
+            invisible_hits+=("${file} (ignored by ${source_file})")
+        fi
+    done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
+
+    # (2) On-disk files that are simply untracked (user forgot to git add).
+    while IFS= read -r file; do
+        [ -z "$file" ] && continue
+        invisible_hits+=("${file} (untracked — run 'git add')")
+    done < <(git ls-files --others --exclude-standard skills 2>/dev/null)
+
+    if [ "${#invisible_hits[@]}" -gt 0 ]; then
+        {
+            echo
+            echo "ERROR: skill files are invisible to a fresh CI checkout:"
+            printf '  - %s\n' "${invisible_hits[@]}"
+            echo
+            echo "A local 'git status' may still look clean if the file is hidden by"
+            echo "your global gitignore. Fix by committing the file (after adding a"
+            echo "negation to .gitignore if needed), or remove it from the working tree."
+        } >&2
+        exit 1
+    fi
+fi
+
 echo "Checking skills.sh discovery"
 npx --yes skills add . --list

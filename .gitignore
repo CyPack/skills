@@ -1,3 +1,10 @@
 .DS_Store
 __pycache__/
 *.pyc
+
+# Override any user-global gitignore that hides skill metadata files.
+# Without these negations, files like AGENTS.md can exist locally yet be
+# invisible to CI, which causes `validate-all-skills.sh` to pass locally
+# and fail on GitHub Actions.
+!AGENTS.md
+!**/AGENTS.md
