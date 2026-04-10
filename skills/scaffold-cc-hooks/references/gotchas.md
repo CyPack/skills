@@ -43,15 +43,32 @@ The failure mode is deceptive by design:
 - Hook scripts are executable and run fine standalone
 - But nothing ever invokes them during a session, and there are no error messages
 
-After every real scaffold, remind the user to accept the workspace trust dialog for the target project. Two paths:
+Treat this as the default first check when a user says hooks are not activating, not firing, or are being ignored. Also do it after a real scaffold if the next step is verifying that hooks work. The exact project path matters, so canonicalize it first with `pwd -P`.
+
+Use the helper script for deterministic checks:
+
+```bash
+scripts/check_workspace_trust.sh /absolute/path/to/project --json
+```
+
+If the status comes back `untrusted`, tell the user exactly that and offer two recovery paths:
 
 1. Start a new session from the project root. Claude Code prompts "Do you trust the files in this workspace?" - answer yes.
-2. If the dialog does not re-prompt (already dismissed once), close all Claude Code sessions and flip the flag directly:
+2. If the dialog does not re-prompt (already dismissed once), close all Claude Code sessions and flip the flag directly.
+
+   Prefer the helper script when you are already using this skill:
+
+   ```bash
+   scripts/check_workspace_trust.sh /absolute/path/to/project --enable
+   ```
+
+   The direct `jq` equivalent is:
 
    ```bash
    jq '.projects["/absolute/path/to/project"].hasTrustDialogAccepted = true' \
      ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
    ```
 
-If hooks still do not fire in a fresh session, check `.projects[...]` in `~/.claude.json` before investigating settings, script permissions, or hook logic. It is almost always this flag.
+Only mutate `~/.claude.json` when the user asks you to flip the flag or explicitly asks you to ensure trust is enabled. Otherwise, offer the check and explain the two recovery paths.
 
+If hooks still do not fire in a fresh session, check `.projects[...]` in `~/.claude.json` before investigating settings, script permissions, or hook logic. It is almost always this flag.

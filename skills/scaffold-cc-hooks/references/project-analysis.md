@@ -4,7 +4,7 @@ Audit the target repository before deciding which Claude Code hooks to enable.
 
 ## Audit Order
 
-1. Find the repo root and determine whether the project is single-package or a workspace.
+1. Find the repo root and determine whether the project is single-package or a workspace. Record the canonical absolute path with `pwd -P`, because Claude Code workspace trust is keyed by exact path.
 2. Inspect existing Claude Code files:
    `CLAUDE.md`, `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/`, `.claude/rules/`, plugin hooks, and generated hook folders.
 3. Inspect automation entry points:
@@ -37,6 +37,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script is intentional
 - Which commands are the real source of truth for lint, test, format, and typecheck?
 - Does the project need shareable hooks in `.claude/settings.json`, or machine-local hooks in `.claude/settings.local.json`?
 - Are there existing custom hooks that must stay untouched?
+- If hooks already exist or the user wants verification, is the exact repo path already trusted in `~/.claude.json`?
 - Which operations must block Claude, and which should only observe or report?
 - Which files or directories are too risky to edit without an explicit gate?
 - Does the project need environment reload behavior when the working directory or `.env`-style files change?
@@ -52,4 +53,3 @@ After the audit, create a small plan JSON with:
 - `enabled_events`
 
 Keep the plan narrow and explicit. The scaffold script should not guess project policy on its own.
-

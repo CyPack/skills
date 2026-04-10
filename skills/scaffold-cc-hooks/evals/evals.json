@@ -74,7 +74,23 @@
         }
       ],
       "tags": ["negative", "design-only"]
+    },
+    {
+      "id": 5,
+      "name": "hooks-not-firing-trust-first",
+      "prompt": "The project already shows the right hooks in /hooks, but nothing ever runs. Before you debug settings or script permissions, check whether Claude Code trusts this exact workspace and offer to enable trust if it is off.",
+      "expected_output": "The response treats workspace trust as the first diagnostic, checks or offers to check the per-project trust flag, and only suggests mutating ~/.claude.json when the user wants trust enabled.",
+      "assertions": [
+        {
+          "text": "Response treats workspace trust as the first check when hooks are registered but never fire",
+          "type": "functional"
+        },
+        {
+          "text": "Response offers a direct trust-enable path for the exact project after user approval",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "troubleshooting", "trust"]
     }
   ]
 }
-

@@ -3,7 +3,7 @@ name: scaffold-cc-hooks
 description: "Scaffold Claude Code hooks into a real project after auditing the project structure in detail. Use when a user wants Claude Code hook setup, hook refactors, full hook-event scaffolding, or managed updates to existing .claude hooks. This skill verifies the live official Claude Code hook docs first, audits the target repo, then generates a bash-first hook scaffold with a hooks README, repeatable merge behavior, and coverage for every current hook event. Trigger on: Claude Code hooks, scaffold hooks, hook events, update hooks, hook architecture, .claude/settings.json. Do NOT use for generic Git hooks, Husky-only setup, or non-Claude agents."
 compatibility: "Requires: bash, jq, git, rg"
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   short-description: "Project-aware Claude Code hook scaffolder"
   openclaw:
     category: "development"
@@ -29,6 +29,8 @@ What is the user asking for?
   Run live docs verification, audit the project, choose a hook plan, then scaffold.
 - Existing `.claude/settings*.json` or `.claude/hooks/` files:
   Audit what already exists, choose `additive` or `overhaul`, then regenerate only the managed hook layer.
+- Existing hooks that show up in `/hooks` but never actually fire:
+  Treat workspace trust as the first diagnostic. Check `~/.claude.json` for the exact project path before debugging settings or script logic, then offer to enable trust if it is still off.
 - Existing hooks plus possible Claude Code feature drift:
   Verify the live official hook event list before writing files. If the docs changed, update the scaffold inputs first.
 - Explanation only, not implementation:
@@ -40,6 +42,8 @@ What is the user asking for?
 |------|--------|
 | Verify the current official hook model | Read the live official docs at `https://code.claude.com/docs/en/hooks` and `https://code.claude.com/docs/en/hooks-guide`, then compare them to `assets/hook-events.json` |
 | Audit a target repo | Run `scripts/audit_project.sh /path/to/project` |
+| Check whether Claude Code trusts the target workspace | Run `scripts/check_workspace_trust.sh /path/to/project --json` |
+| Enable workspace trust for the target workspace | Run `scripts/check_workspace_trust.sh /path/to/project --enable` |
 | Understand the event catalog | Read `references/hook-events.md` |
 | Decide additive vs overhaul | Read `references/merge-strategy.md` |
 | Generate or refresh the managed hook scaffold | Run `scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
@@ -56,7 +60,25 @@ What is the user asking for?
 6. Scaffold every current hook event as a commented bash stub under the managed hook root, even if the event stays disabled in settings.
 7. Wire only the enabled events into the chosen settings file so the project does not pay runtime cost for inactive stubs.
 8. Regenerate `.claude/hooks/README.md` so the project always has a readable event map.
-9. After scaffolding, always remind the user that hooks will not fire until the workspace trust dialog has been accepted for the target project. This is the single most common cause of the "hooks are registered but never run" failure mode. See `references/gotchas.md` gotcha 9.
+9. If the user reports that hooks are registered but not firing, or you just completed a real scaffold and need to verify the setup, check or explicitly offer to check workspace trust for the exact project path before debugging hook logic.
+10. If trust is disabled, explain that `hasTrustDialogAccepted` is false for that project. Offer the user two recovery paths: accept the dialog in a fresh Claude Code session, or flip the flag directly. Only mutate `~/.claude.json` when the user asks you to do so or explicitly asks you to ensure trust is enabled.
+
+## Trust First Heuristic
+
+Default to a trust check early when any of these signals appear:
+
+- the user says hooks are not activating, not firing, or being ignored
+- `/hooks` shows registered handlers with the expected counts, but nothing executes
+- the hook scripts work when run by hand, but Claude Code never invokes them
+- you just scaffolded hooks and the user wants you to confirm they actually work
+
+Use this flow:
+
+1. Canonicalize the target path first. Trust is keyed by the exact absolute project path.
+2. Run `scripts/check_workspace_trust.sh /path/to/project --json`.
+3. If status is `untrusted`, tell the user the flag is false and offer to enable it.
+4. If the user wants it fixed, run `scripts/check_workspace_trust.sh /path/to/project --enable`.
+5. Only after trust is confirmed should you spend time debugging settings merges, hook matchers, script permissions, or hook logic.
 
 ## Live Docs First
 
@@ -77,6 +99,7 @@ If the official docs and the secondary articles disagree, follow the official do
 Before choosing any hook structure, inspect:
 
 - repo root and workspace shape
+- the exact absolute project path Claude Code will trust, because trust is keyed by path in `~/.claude.json`
 - languages and package managers
 - build, test, lint, and format entry points
 - monorepo tools like Turborepo, Nx, pnpm workspaces, Bun workspaces, or custom task runners
@@ -114,6 +137,7 @@ When the skill is invoked again against a project:
 
 - Re-run live docs verification before assuming the event set is unchanged.
 - Re-audit the project before assuming the current hook plan still fits.
+- If the user says hooks never fire, or the scaffold needs verification, re-check workspace trust for the exact project path before assuming the generated settings are wrong.
 - Preserve non-managed hooks by default.
 - Treat previously generated hooks under the managed root as replaceable in `overhaul` mode.
 - Treat previously generated hooks as append-only in `additive` mode unless a missing event or stale README requires a refresh.
@@ -142,6 +166,7 @@ When the skill is invoked again against a project:
 ## Operational Scripts
 
 - `scripts/audit_project.sh` builds a project profile from real repo signals.
+- `scripts/check_workspace_trust.sh` checks or enables Claude Code workspace trust for an exact project path.
 - `scripts/scaffold_hooks.sh` renders the managed hook tree, manifest, README, and settings fragment.
 - `scripts/merge_settings.sh` preserves non-managed hooks while replacing previously managed handlers.
 - `scripts/render_hooks_readme.sh` rebuilds `.claude/hooks/README.md` from the manifest and the current plan.
@@ -153,5 +178,4 @@ When the skill is invoked again against a project:
 3. `Stop` hooks can loop forever unless you honor `stop_hook_active`.
 4. Hook shells are non-interactive. Shell profile noise can break JSON output.
 5. `PermissionRequest` does not fire in non-interactive `-p` mode.
-6. Hooks do not fire in untrusted workspaces. Claude Code gates execution on `hasTrustDialogAccepted` in `~/.claude.json` under `.projects["/absolute/path/to/project"]`. After every scaffold, tell the user to accept the workspace trust dialog in the target project or nothing will run. The scaffold looks perfect, `/hooks` shows the config, and the scripts sit there being ignored. See `references/gotchas.md` gotcha 9 for the recovery command.
-
+6. Hooks do not fire in untrusted workspaces. Claude Code gates execution on `hasTrustDialogAccepted` in `~/.claude.json` under `.projects["/absolute/path/to/project"]`. When hooks look installed but never run, or after a real scaffold, check trust first with `scripts/check_workspace_trust.sh` before blaming the hook config. See `references/gotchas.md` gotcha 9 for the exact recovery flow.

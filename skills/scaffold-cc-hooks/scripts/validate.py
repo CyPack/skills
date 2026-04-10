@@ -24,6 +24,7 @@ from pathlib import Path
 EXPECTED_EVENT_COUNT = 26
 REQUIRED_OPERATIONAL_SCRIPTS = [
     "scripts/audit_project.sh",
+    "scripts/check_workspace_trust.sh",
     "scripts/merge_settings.sh",
     "scripts/render_hooks_readme.sh",
     "scripts/scaffold_hooks.sh",
@@ -222,4 +223,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
