@@ -56,6 +56,7 @@ What is the user asking for?
 6. Scaffold every current hook event as a commented bash stub under the managed hook root, even if the event stays disabled in settings.
 7. Wire only the enabled events into the chosen settings file so the project does not pay runtime cost for inactive stubs.
 8. Regenerate `.claude/hooks/README.md` so the project always has a readable event map.
+9. After scaffolding, always remind the user that hooks will not fire until the workspace trust dialog has been accepted for the target project. This is the single most common cause of the "hooks are registered but never run" failure mode. See `references/gotchas.md` gotcha 9.
 
 ## Live Docs First
 
@@ -152,4 +153,5 @@ When the skill is invoked again against a project:
 3. `Stop` hooks can loop forever unless you honor `stop_hook_active`.
 4. Hook shells are non-interactive. Shell profile noise can break JSON output.
 5. `PermissionRequest` does not fire in non-interactive `-p` mode.
+6. Hooks do not fire in untrusted workspaces. Claude Code gates execution on `hasTrustDialogAccepted` in `~/.claude.json` under `.projects["/absolute/path/to/project"]`. After every scaffold, tell the user to accept the workspace trust dialog in the target project or nothing will run. The scaffold looks perfect, `/hooks` shows the config, and the scripts sit there being ignored. See `references/gotchas.md` gotcha 9 for the recovery command.
 

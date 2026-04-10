@@ -32,3 +32,26 @@ The official guide says multiple `PreToolUse` hooks that all rewrite input are n
 
 The scaffold is only supposed to replace the managed generated layer. If the repo has custom hooks outside that layer, review them explicitly before removing anything.
 
+## 9. Hooks silently do not fire in untrusted workspaces
+
+Claude Code gates hook execution on a per-project trust flag stored in `~/.claude.json` under `.projects["/absolute/path/to/project"].hasTrustDialogAccepted`. Until that flag is `true`, hooks are registered and visible in `/hooks`, but they never execute. This is a deliberate security layer that prevents a cloned malicious repo from firing an arbitrary `PreToolUse` hook the moment it opens.
+
+The failure mode is deceptive by design:
+
+- `settings.json` parses cleanly and loads
+- `/hooks` shows every registered hook with the right counts
+- Hook scripts are executable and run fine standalone
+- But nothing ever invokes them during a session, and there are no error messages
+
+After every real scaffold, remind the user to accept the workspace trust dialog for the target project. Two paths:
+
+1. Start a new session from the project root. Claude Code prompts "Do you trust the files in this workspace?" - answer yes.
+2. If the dialog does not re-prompt (already dismissed once), close all Claude Code sessions and flip the flag directly:
+
+   ```bash
+   jq '.projects["/absolute/path/to/project"].hasTrustDialogAccepted = true' \
+     ~/.claude.json > ~/.claude.json.tmp && mv ~/.claude.json.tmp ~/.claude.json
+   ```
+
+If hooks still do not fire in a fresh session, check `.projects[...]` in `~/.claude.json` before investigating settings, script permissions, or hook logic. It is almost always this flag.
+
