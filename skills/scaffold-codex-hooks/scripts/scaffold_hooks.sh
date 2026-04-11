@@ -26,6 +26,17 @@ escape_for_sed() {
     printf '%s' "$1" | sed -e 's/[&|\\]/\\&/g'
 }
 
+assert_live_git_root_substitution() {
+    local command="$1"
+
+    case "$command" in
+        *'\$(git rev-parse --show-toplevel)'*)
+            echo "Generated hook command escaped \$(git rev-parse --show-toplevel): $command" >&2
+            exit 1
+            ;;
+    esac
+}
+
 build_hook_command() {
     local script_name="$1"
     if [ "$IS_GIT_REPO" = "true" ]; then
@@ -349,6 +360,7 @@ while IFS= read -r row; do
     timeout="$(printf '%s' "$row" | jq -r '.timeout')"
     status_message="$(printf '%s' "$row" | jq -r '.status_message')"
     command="$(build_hook_command "$script_name")"
+    assert_live_git_root_substitution "$command"
     effective_matcher="$matcher"
     if [ "$matcher_supported" != "true" ]; then
         effective_matcher=""

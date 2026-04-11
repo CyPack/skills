@@ -35,6 +35,7 @@ PYTHON_SCRIPTS = [
     "scripts/validate.py",
     "scripts/test_skill.py",
 ]
+ESCAPED_GIT_ROOT = r"\$(git rev-parse --show-toplevel)"
 
 
 def extract_file_references(content: str) -> list[str]:
@@ -73,6 +74,30 @@ def run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = No
         capture_output=True,
         text=True,
     )
+
+
+def iter_hook_commands(hooks_data: dict) -> list[str]:
+    commands: list[str] = []
+
+    for groups in hooks_data.get("hooks", {}).values():
+        for group in groups:
+            for hook in group.get("hooks", []):
+                command = hook.get("command")
+                if isinstance(command, str):
+                    commands.append(command)
+
+    return commands
+
+
+def first_hook_command(hooks_data: dict, event_name: str) -> str | None:
+    event_groups = hooks_data.get("hooks", {}).get(event_name, [])
+    for group in event_groups:
+        for hook in group.get("hooks", []):
+            command = hook.get("command")
+            if isinstance(command, str) and command:
+                return command
+
+    return None
 
 
 def test_skill(skill_path: Path) -> dict:
@@ -310,38 +335,80 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         hooks_json_path = project / ".codex" / "hooks.json"
+        generated_fragment_path = project / ".codex" / "hooks" / "generated" / "hooks.generated.json"
+        generated_config_errors: list[str] = []
+        for config_path in [hooks_json_path, generated_fragment_path]:
+            if not config_path.exists():
+                generated_config_errors.append(
+                    f"{config_path.relative_to(project)} was not generated"
+                )
+                continue
+            hooks_data = load_json(config_path)
+            escaped_commands = [
+                command for command in iter_hook_commands(hooks_data) if ESCAPED_GIT_ROOT in command
+            ]
+            if escaped_commands:
+                generated_config_errors.append(
+                    f"{config_path.relative_to(project)} contains escaped git-root command substitution"
+                )
+
+        if generated_config_errors:
+            results["errors"].extend(generated_config_errors)
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
+
+        results["integration_checks"]["total"] += 1
         if hooks_json_path.exists():
             hooks_data = load_json(hooks_json_path)
-            session_groups = hooks_data.get("hooks", {}).get("SessionStart", [])
-            session_command = None
-            if session_groups:
-                session_hooks = session_groups[0].get("hooks", [])
-                if session_hooks:
-                    session_command = session_hooks[0].get("command")
+            session_command = first_hook_command(hooks_data, "SessionStart")
+            pre_tool_use_command = first_hook_command(hooks_data, "PreToolUse")
             if not session_command:
                 results["errors"].append("SessionStart command was not generated in hooks.json")
                 results["passed"] = False
-            elif "\\$(git rev-parse --show-toplevel)" in session_command:
-                results["errors"].append("SessionStart command escaped $(git rev-parse --show-toplevel)")
+            elif not pre_tool_use_command:
+                results["errors"].append("PreToolUse command was not generated in hooks.json")
                 results["passed"] = False
             else:
-                session_proc = subprocess.run(
-                    session_command,
-                    cwd=str(project),
-                    env=env,
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                    shell=True,
-                )
-                if session_proc.returncode == 0:
-                    results["integration_checks"]["passed"] += 1
-                else:
-                    results["errors"].append(
-                        "generated SessionStart command did not execute cleanly: "
-                        f"{session_proc.stderr.strip() or session_proc.stdout.strip() or 'unknown error'}"
+                command_procs = [
+                    (
+                        "SessionStart",
+                        session_command,
+                        json.dumps({"source": "startup", "cwd": str(project)}),
+                    ),
+                    (
+                        "PreToolUse",
+                        pre_tool_use_command,
+                        json.dumps(
+                            {
+                                "tool_input": {"command": "pwd"},
+                                "cwd": str(project),
+                            }
+                        ),
+                    ),
+                ]
+                command_errors: list[str] = []
+                for event_name, command, payload in command_procs:
+                    proc = subprocess.run(
+                        command,
+                        cwd=str(project),
+                        env=env,
+                        input=payload,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                        shell=True,
                     )
+                    if proc.returncode != 0:
+                        command_errors.append(
+                            f"generated {event_name} command did not execute cleanly: "
+                            f"{proc.stderr.strip() or proc.stdout.strip() or 'unknown error'}"
+                        )
+                if command_errors:
+                    results["errors"].extend(command_errors)
                     results["passed"] = False
+                else:
+                    results["integration_checks"]["passed"] += 1
 
         results["integration_checks"]["total"] += 1
         if hooks_json_path.exists():
