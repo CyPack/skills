@@ -312,6 +312,40 @@ def test_skill(skill_path: Path) -> dict:
         hooks_json_path = project / ".codex" / "hooks.json"
         if hooks_json_path.exists():
             hooks_data = load_json(hooks_json_path)
+            session_groups = hooks_data.get("hooks", {}).get("SessionStart", [])
+            session_command = None
+            if session_groups:
+                session_hooks = session_groups[0].get("hooks", [])
+                if session_hooks:
+                    session_command = session_hooks[0].get("command")
+            if not session_command:
+                results["errors"].append("SessionStart command was not generated in hooks.json")
+                results["passed"] = False
+            elif "\\$(git rev-parse --show-toplevel)" in session_command:
+                results["errors"].append("SessionStart command escaped $(git rev-parse --show-toplevel)")
+                results["passed"] = False
+            else:
+                session_proc = subprocess.run(
+                    session_command,
+                    cwd=str(project),
+                    env=env,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    shell=True,
+                )
+                if session_proc.returncode == 0:
+                    results["integration_checks"]["passed"] += 1
+                else:
+                    results["errors"].append(
+                        "generated SessionStart command did not execute cleanly: "
+                        f"{session_proc.stderr.strip() or session_proc.stdout.strip() or 'unknown error'}"
+                    )
+                    results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        if hooks_json_path.exists():
+            hooks_data = load_json(hooks_json_path)
             custom_group = {
                 "matcher": "startup",
                 "hooks": [

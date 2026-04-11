@@ -39,3 +39,13 @@ Write the event-specific output contract into the generated stub comments and fo
 ## 9. Early articles drifted as the feature evolved
 
 Some early writeups described fewer events or rougher semantics. Treat the official docs, generated schemas, and runtime source as the authority before you scaffold for real.
+
+## 10. There is no documented per-hook verbosity flag
+
+The current official docs do not document a hook-specific `verbose` or `debug` switch.
+
+For visibility, use the tools that are documented today:
+
+- `statusMessage` for lightweight UI status text while a hook runs
+- exit code `2` plus `stderr` when a hook needs to block or continue with a reason
+- `log_dir` in `config.toml` to control where Codex writes logs such as `codex-tui.log`

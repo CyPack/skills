@@ -29,7 +29,8 @@ escape_for_sed() {
 build_hook_command() {
     local script_name="$1"
     if [ "$IS_GIT_REPO" = "true" ]; then
-        printf "/usr/bin/env bash -lc 'exec \"\\\$(git rev-parse --show-toplevel)/%s/events/%s\"'\n" \
+        # Keep the command substitution live for hook execution time.
+        printf "/usr/bin/env bash -lc 'exec \"\$(git rev-parse --show-toplevel)/%s/events/%s\"'\n" \
             "$MANAGED_ROOT_REL" "$script_name"
     else
         printf "/usr/bin/env bash -lc 'exec \"%s/events/%s\"'\n" \
